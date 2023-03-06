@@ -38,6 +38,9 @@
   --callout-border-rgb: 172, 175, 176;
   --card-rgb: 180, 185, 188;
   --card-border-rgb: 131, 134, 135;
+
+  --light-cyan: #72e1ff;
+  --dark-cyan: #0aaad6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -77,6 +80,9 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  font-family: 'Saira Condensed', sans-serif;
+  letter-spacing: 0.1rem;
+  user-select: none;
 }
 
 html,
@@ -104,4 +110,9 @@ a {
   html {
     color-scheme: dark;
   }
+}
+
+img {
+  height: 100%;
+  width: 100%;
 }

@@ -1,0 +1,113 @@
+.main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100vw;
+    background-image: url(https://i.ibb.co/Gkn6knQ/wallpaperflare-com-wallpaper.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+    form {
+        padding: 3rem;
+        color: white;
+        font-size: 2rem;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 30rem;
+        border-radius: 1rem;
+
+        h2 {
+            text-align: center;
+
+            span {                
+                &:hover {
+                    color: #72e1ff;
+                }
+            }
+        }
+
+        input {
+            border: none;
+            height: 2rem;
+            color: white;
+            z-index: 20;
+            font-size: 1.5rem;
+        }
+
+        input[type=submit] {
+            border-radius: 2rem;
+            background-color: #0aaad6;
+            font-size: 2rem;
+            height: fit-content;
+            color: white;
+
+            &:hover {
+                background-color: #0aaad6;
+                box-shadow: 0 0 15px 5px #72e0ff76;
+            }
+        }
+
+        i {
+            position: absolute;
+            right: 0;
+            top: 1.2rem;
+            font-size: 1rem;
+            color: #72e1ff;
+
+            &:hover {
+                color: #0aaad6;
+            }
+        }
+
+        div {
+            position: relative;
+            width: 100%;
+
+            input[type=text],
+            input[type=password],
+            input[value=""] {
+                background-color: transparent;
+                outline: none;
+                width: 100%;
+                padding: 0 2rem;
+                border-bottom: 2px solid #72e1ff;
+
+                &:hover {
+                    border-color: #0aaad6;
+
+                    &+label {
+                        color: #0aaad6;
+                    }
+                }
+
+                &:focus, &[value]:not([value=""]) {
+                    border-width: 4px;
+
+                    &+label {
+                        font-size: 1rem;
+                        left: 0.5rem;
+                        top: -0.75rem;
+                    }
+                }
+            }
+
+            label {
+                font-size: 1.5rem;
+                position: absolute;
+                left: 2rem;
+                top: 0.5rem;
+                transition: all 0.3s;
+                color: #72e1ff;
+                z-index: 10;
+                cursor: text;
+            }
+        }
+    }
+}

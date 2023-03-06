@@ -6,6 +6,7 @@
     align-items: center;
     min-height: 100vh;
     width: 100vw;
+    background-color: rgba(#121212, 0.9);
 
     .gameBackground {
         position: absolute;
@@ -17,7 +18,118 @@
     }
 }
 
+.room {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-grow: 1;
+    padding-top: 3rem;
+
+    .roomLeft {
+        display: flex;
+        flex-direction: column;
+        width: 25%;
+        gap: 4rem;
+        padding: 2rem;
+
+        .player {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            gap: 1rem;
+
+            .playerName {
+                font-size: 2.25rem;
+                font-weight: bold;
+            }
+
+            .playerAvatar {
+                height: 15rem;
+                width: 15rem;
+
+                img {
+                    object-fit: cover;
+                    border-radius: 50%;
+                    border: 0.2rem solid white;
+                }
+            }
+
+        }
+    }
+
+    .roomRight {
+        width: 75%;
+        background-color: rgba(#0A0708, 0.25);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background-image: url(https://cdnb.artstation.com/p/assets/images/images/028/357/655/4k/jedd-chevrier-legionplains-413500-chevrier-v2.jpg?1594232492);
+        background-position: top;
+
+        .teamFormatList {
+            position: relative;
+            width: 100%;
+            height: 50%;
+            flex-grow: 1;
+            background-color: rgba(#0A0708, 0.25);
+            border-bottom: 0.2rem solid white;
+        }
+
+        .teamFormat {
+            position: relative;
+            width: 100%;
+            height: 50%;
+            flex-grow: 1;
+            background-color: rgba(#0A0708, 0.5);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 0.2rem solid white;
+
+            .playArea {   
+                position: relative;
+                display: grid;
+                // flex-grow: 1;
+                height: 200px;
+                width: 400px;
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                border: 1px solid black;
+
+                div {
+                    text-align: center;
+                    align-items: center;
+                    height: 100px;
+                    width: 100px;
+                }
+            }
+        }
+
+        .readyButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            height: 6rem;
+            width: 20rem;
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-top: -3rem;
+            margin-left: -10rem;
+            border: none;
+            outline: none;
+            border-radius: 3rem;
+            background-color: #0aaad6;
+            color: white;
+        }
+    }
+
+}
+
 .playArea {
+    position: relative;
     display: grid;
     // flex-grow: 1;
     height: 1000px;
@@ -25,23 +137,23 @@
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     border: 1px solid black;
-    box-sizing: border-box;
 
     div {
-        position: relative;
         text-align: center;
         align-items: center;
-        background-color: black;
         height: 100px;
         width: 100px;
 
         .selectingCell {
             visibility: hidden;
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            // background-color: rgba(red, $alpha: 0.2);
+            height: 90%;
+            width: 90%;
+            top: 5%;
+            left: 5%;
+            border: 0 solid rgba(red, .5);
+            transition: all 0.2s;
         }
 
         img {
@@ -51,15 +163,32 @@
     }
 
     .blackBG {
+        position: relative;
+        background-color: black;
+
         img {
             opacity: 0.75;
         }
     }
 
-    .whiteBG {}
+    .whiteBG {
+        position: relative;
 
-    & :hover {
+        img {
+            opacity: 1;
+        }
+    }
+
+    .chessHovering {
         .selectingCell {
+            border: 0.2rem solid rgba(red, .75);
+            visibility: visible;
+        }
+    }
+
+    .chessSelecting {
+        .selectingCell {
+            border: 0.25rem solid rgba(red, 1.0);
             visibility: visible;
         }
     }
@@ -69,36 +198,65 @@
     position: absolute;
     height: 561px;
     width: 411px;
-    background-color: black;
-    border: 1px solid black;
+    background-color: #0A0708;
     border-radius: 10px;
     z-index: 90;
-    box-sizing: border-box;
+
+    .cardBackground {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+        user-select: none;
+        z-index: 0;
+    }
 
     .cardInfo {
-        width: 100%;
-        height: 40%;
+        height: 541px;
+        width: 391px;
+        top: 10px;
+        left: 10px;
         position: absolute;
-        bottom: 0;
-        background-color: white;
-        border-radius: 0 0 10px 10px;
         box-sizing: border-box;
+        border: 0.2rem solid;
+        border-color: white;
+        border-radius: 5px 5px 0 0;
+        z-index: 10;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: flex-end;
+        z-index: 20;
+        user-select: none;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
 
-        * {
-            height: 50%;
-            width: 33%;
+        .cardName {
+            width: 100%;
+            min-height: 10%;
+            padding-top: 2rem;
+            background-image: linear-gradient(to top, rgba(#0A0708, 0.8), transparent);
+            font-size: 2rem;
+        }
+
+        .cardAbility {
+            width: 100%;
+            min-height: 30%;
+            background-color: rgba(#0A0708, 0.8);
+            border-radius: 0 0 10px 10px;
+
+            &::before {
+                content: "";
+                position: absolute;
+                width: 80%;
+                right: 10%;
+                border-top: white solid 0.1rem;
+            }
         }
     }
-    
-    .cardStatus {
-        width: 100%;
-        position: absolute;
-        bottom: 40%;
-        color: white;
-        font-weight: bolder;
-        user-select: none
-    }
+}
+
+.chess {
+    position: absolute;
+    transition: all 0.3s;
 }
