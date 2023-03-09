@@ -9,6 +9,7 @@ import { database } from "../api/firebase";
 import Header from '../../components/Header';
 
 export default function Room() {
+    const [chessDatabase, setChessDatabase] = useState([]);
     const [roomData, setRoomData] = useState({});
     const [playersData, setPlayersData] = useState([]);
     const [accountInfo, setAccountInfo] = useState({});
@@ -25,6 +26,22 @@ export default function Room() {
         let accountdata = localStorage.getItem("accountInfo");
         if (!accountdata) accountdata = JSON.parse(sessionStorage.getItem("accountInfo"));
         if (!accountdata) return;
+
+        let chessData;
+
+        await get(query(ref(database, "chess")))
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    setChessDatabase(Object.values(snapshot.val()));
+                    chessData = Object.values(snapshot.val());
+                } else {
+                    console.log("Can't found data");
+                };
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
         await get(child(dbRef, "user/" + accountdata.id))
             .then((snapshot) => {
                 if (snapshot.exists()) {
@@ -76,6 +93,7 @@ export default function Room() {
         // console.log(accountdata);
         if (roomdata.players.filter(x => x.id === accountdata.id).length > 0) console.log("Welcome to room:", roomId);
         else router.push("/play");
+        setLoadedData(1);
     }
 
     useEffect(() => {
@@ -107,15 +125,39 @@ export default function Room() {
         </>
     }, [roomData, playersData]);
 
+    const renderAllChesses = useMemo(() => {
+        if (loadedData === 0) return;
+
+        let color = "w";
+        color = playersData.find(x => x.id === accountInfo.id)?playersData.find(x => x.id === accountInfo.id).color:"w";
+
+        return (
+            <div className={styles.inventory}>
+                {
+                    // console.log(accountInfo.items)
+                    Object.entries(accountInfo.items.chesses).map((chess) => {
+                        const data = chessDatabase.find(x => x.id === chess[0]);
+                        return (
+                            <div className={styles.inventoryItem}>
+                                <img src={color==="w"?data.img.white:data.img.black} />
+                            </div>
+                        )
+                    })
+                }
+            </div>
+        )
+    }, [accountInfo, loadedData, playersData]);
+
+
     const renderTeamFormat = useMemo(() => {
         return (
-            <div className={styles.teamFormat}>
+            <>
                 <div className={styles.playArea}>
                     {
                         [16, 15, 14, 13, 6, 5, 4, 3].map((i) => {
                             return (
-                                <div key={i} id={"cell" + i} className={styles.blackBG} style={(i % 2 + Math.floor(i / 4) % 2) === 1 ? {backgroundColor: "#ffffed"} : {backgroundColor: "#90EE90"}}
-                                    // onClick={() => handleClickCell(i)}
+                                <div key={i} id={"cell" + i} className={styles.blackBG} style={(i % 2 + Math.floor(i / 10) % 2) === 1 ? { backgroundColor: "#ffffed" } : { backgroundColor: "#90EE90" }}
+                                // onClick={() => handleClickCell(i)}
                                 >
                                     <div className={styles.selectingCell} />
                                 </div>
@@ -124,7 +166,7 @@ export default function Room() {
                     }
                 </div>
                 <div></div>
-            </div>
+            </>
         )
     }, []);
 
@@ -137,8 +179,12 @@ export default function Room() {
                         {renderPlayers}
                     </div>
                     <div className={styles.roomRight}>
-                        <div className={styles.teamFormatList}></div>
-                        {renderTeamFormat}
+                        <div className={styles.teamFormatList}>
+                            {renderAllChesses}
+                        </div>
+                        <div className={styles.teamFormat}>
+                            {renderTeamFormat}
+                        </div>
                         <button className={styles.readyButton}>
                             SẴN SÀNG
                         </button>

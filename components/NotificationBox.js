@@ -2,23 +2,26 @@ import { React, ReactDOM, useEffect, useState, useMemo } from "react";
 import styles from "../styles/Home.module.scss";
 
 const NotificationBox = ({ message = "", show = false }) => {
-    const [showNotification, setShowNotification] = useState(false)
 
     useEffect(() => {
-        if (showNotification) {
+        if (show) {
             const ele = document.getElementById("notificationBox");
-            if (!ele.classList.contains("active")) ele.classList.add("active");
+            if (!ele.classList.contains(styles.active)) ele.classList.add(styles.active);
             setTimeout(() => {
-                if (ele.classList.contains("active")) ele.classList.remove("active");
-            }, 3000);
+                if (ele.classList.contains(styles.active)) ele.classList.remove(styles.active);
+            }, 500);
         }
-    }, [showNotification])
+    }, [show])
+
+    const renderMessage = useMemo(() => {
+        return <p>{message}</p>;
+    }, [message]);
 
     return (
         <div className={styles.notificationContainer} id="notificationBox">
             <div className={styles.blurBackground} />
             <div className={styles.notificationBox}>
-                <p>{message}</p>
+                {renderMessage}
             </div>
         </div>
     )

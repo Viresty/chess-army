@@ -11,6 +11,7 @@ import NotificationBox from '../../components/NotificationBox';
 
 // Data
 import datajson from "../../public/testcard.json"
+import notifivn from "../../message/notification_vn"
 
 let ObjectMap = [
     [" _", " _", " _", " _", " _", " _", " _", " _", " _", " _"],
@@ -45,11 +46,20 @@ export default function Play() {
     const [selectingChess, setSelectingChess] = useState({});
     const [objectsMap, setObjectsMap] = useState([...ObjectMap]);
 
+    const [notificationMessage, setNotificationMessage] = useState("");
+    const [showNotification, setShowNotification] = useState(false);
+
     const dbRef = ref(database);
 
     // Function
+    const setupNotification = (id) => {
+        setNotificationMessage(Object.entries(notifivn).find(x => x[0] === id)[1]);
+        setShowNotification(true);
+    }
+
     async function getData() {
         if (loadedData > 0) return;
+
         let chessData;
 
         let accountdata = localStorage.getItem("accountInfo");
@@ -98,10 +108,12 @@ export default function Play() {
 
                         player.chesses.map((chess, idx) => {
                             const data = chessData.filter(x => x.id === chess.chessId)[0];
-                            chessList.push({ ...data,
+                            chessList.push({
+                                ...data,
                                 position: chess.position === "X" ? "X" : (userColor === playerColor ? 99 - chess.position : chess.position),
                                 color: playerColor,
-                                id: chessList.length + "_" + playerColor + "_" + data.id + "_" });
+                                id: chessList.length + "_" + playerColor + "_" + data.id + "_"
+                            });
                             setChessInfos([...chessList]);
                         })
                     })
@@ -118,12 +130,21 @@ export default function Play() {
         fetchDB();
     };
 
-    const updateMove = (newPos) => {
+    const updateMove = (chess, newPos) => {
         // update chess's position
-        const chessList = [];
-        chessInfos.filter(x => x.color === playerInfo.color).forEach((chess) => {
-            chessList.push({ chessId: chess.id.split("_")[2], position: 99 - newPos })
+        const allChessList = [];
+        chessInfos.forEach((chess) => {
+            allChessList.push(chess);
         })
+        const chessinfo = chess.id.split("_");
+        allChessList[chessinfo[0]].position = newPos;
+
+        const chessList = [];
+        allChessList.filter(x => x.color === playerInfo.color).forEach((chess) => {
+            chessList.push({ chessId: chess.id.split("_")[2], position: 99 - chess.position })
+        })
+
+        console.log(chessList);
         chessList.forEach((value, idx) => {
             update(ref(database, "game/" + window.location.pathname.split("/")[2] + "/players/" + playerInfo.index + "/chesses/" + idx), value);
         })
@@ -135,7 +156,7 @@ export default function Play() {
 
         onValue(query(ref(database, "game/" + window.location.pathname.split("/")[2])), (snapshot) => {
             if (snapshot.exists()) {
-                console.log("UPDATE");
+                // console.log("UPDATE");
 
                 const chessList = [];
                 let userColor = "";
@@ -148,10 +169,12 @@ export default function Play() {
 
                     player.chesses.map((chess, idx) => {
                         const data = chessDatabase.filter(x => x.id === chess.chessId)[0];
-                        chessList.push({ ...data,
+                        chessList.push({
+                            ...data,
                             position: chess.position === "X" ? "X" : (userColor === playerColor ? 99 - chess.position : chess.position),
                             color: playerColor,
-                            id: chessList.length + "_" + playerColor + "_" + data.id + "_" });
+                            id: chessList.length + "_" + playerColor + "_" + data.id + "_"
+                        });
                         setChessInfos([...chessList]);
                     })
 
@@ -175,6 +198,7 @@ export default function Play() {
             showMovesOff("#");
             showMovesOff("*");
             chess.position = i;
+            console.log(chess);
             chesses[chessinfo[0]] = chess;
             let newMap = [...objectsMap];
             newMap[x][y] = chess.id;
@@ -183,11 +207,12 @@ export default function Play() {
             setChessInfos([...chesses]);
             setTurn(turn + 1);
             setPhase(1);
-            updateMove(i);
+            updateMove(chess, i);
         }
     }
 
     const isMoveable = (cell, color = "", action = "") => {
+        if (cell === null) return false;
         let chessinfo = cell.split("_");
         // Can't move or kill
         if (cell.includes("!")) return false;
@@ -281,6 +306,40 @@ export default function Play() {
                         }
                         break;
 
+                    case "knight":
+                        let topX, bottomX, topY, bottomY;
+                        let leftY, rightY, leftX, rightX;
+                        topX = bottomX = topY = bottomY = x;
+                        leftY = rightY = leftX = rightX = y;
+                        for (let i = 1; i <= move[1]; i++) {
+                            topX -= 2; bottomX += 2; leftX -= 1; rightX += 1;
+                            topY -= 1; bottomY += 1; leftY -= 2; rightY += 2;
+                            // forward-left
+                            if (topX > 0 && leftX > 0)
+                                if (isMoveable(objectsMap[topX][leftX], chess.color, action)) objectsMap[topX][leftX] += symbol;
+                            // forward-right
+                            if (topX > 0 && rightX < 10)
+                                if (isMoveable(objectsMap[topX][rightX], chess.color, action)) objectsMap[topX][rightX] += symbol;
+                            // backward-left
+                            if (bottomX < 10 && leftX > 0)
+                                if (isMoveable(objectsMap[bottomX][leftX], chess.color, action)) objectsMap[bottomX][leftX] += symbol;
+                            // backward-right
+                            if (bottomX < 10 && rightX < 10)
+                                if (isMoveable(objectsMap[bottomX][rightX], chess.color, action)) objectsMap[bottomX][rightX] += symbol;
+                            // forward-left
+                            if (topY > 0 && leftY > 0)
+                                if (isMoveable(objectsMap[topY][leftY], chess.color, action)) objectsMap[topY][leftY] += symbol;
+                            // forward-right
+                            if (topY > 0 && rightY < 10)
+                                if (isMoveable(objectsMap[topY][rightY], chess.color, action)) objectsMap[topY][rightY] += symbol;
+                            // backward-left
+                            if (bottomY < 10 && leftY > 0)
+                                if (isMoveable(objectsMap[bottomY][leftY], chess.color, action)) objectsMap[bottomY][leftY] += symbol;
+                            // backward-right
+                            if (bottomY < 10 && rightY < 10)
+                                if (isMoveable(objectsMap[bottomY][rightY], chess.color, action)) objectsMap[bottomY][rightY] += symbol;
+                        }
+
                     default:
                         break;
                 }
@@ -319,18 +378,17 @@ export default function Play() {
     }
 
     const handleClickChess = (chess) => {
-
         switch (phase) {
             case 1:
-                if (turn % 2 === 1 && playerInfo.color !== "w") {
-                    console.log("Đéo phải lượt của m");
+                if (turn % 2 === 1 && playerInfo.color !== "w" || turn % 2 === 0 && playerInfo.color !== "b") {
+                    setupNotification("ER000");
                     return;
                 };
                 if (playerInfo.color !== chess.color) {
-                    console.log("Đéo phải quân của m");
+                    setupNotification("ER001");
                     return;
                 };
-                setSelectingChess({ ...chess });
+                setSelectingChess(chess);
                 showMovesOn(chess, "#", "move");
                 setPhase(2);
                 break;
@@ -396,8 +454,11 @@ export default function Play() {
 
     // Render
     const renderNotification = useMemo(() => {
-        return;
-    }, [])
+        setTimeout(() => {
+            setShowNotification(false);
+        }, 500);
+        return <NotificationBox message={notificationMessage} show={showNotification} />;
+    }, [notificationMessage, showNotification])
 
     const renderGround = useMemo(() => {
         return (
@@ -418,33 +479,40 @@ export default function Play() {
         )
     }, [mapInfo, objectsMap, turn, phase]);
 
+    const renderObject = useMemo(() => {
+        return (
+            <>
+                {
+                    chessInfos.map((chess, idx) => {
+                        return (
+                            <>
+                                {
+                                    chess.position !== "X" &&
+                                    <div key={idx} className={styles.chess}
+                                        style={{ top: Math.floor(chess.position / 10) * 100 + "px", left: (chess.position % 10) * 100 + "px" }}
+                                        id={chess.id}
+                                        onMouseEnter={() => handleHoverChess(chess)}
+                                        onMouseLeave={() => cancelHoverChess()}
+                                        onClick={() => handleClickChess(chess)}
+                                    >
+                                        <img src={chess.color === "w" ? chess.img.white : chess.img.black}></img>
+                                    </div>
+                                }
+                            </>
+                        )
+                    })
+                }
+            </>
+        )
+    }, [chessInfos, turn, objectsMap, objectInfos, phase])
+
     const renderPlayArea = useMemo(() => {
         return (
             <>
-                <NotificationBox />
                 <img className={styles.gameBackground} src="https://i.ibb.co/n30yjHG/grassland-bg.jpg" alt="grassland-bg" border="0"></img>
                 < div className={styles.playArea} >
                     {renderGround}
-                    {
-                        chessInfos.map((chess, idx) => {
-                            return (
-                                <>
-                                    {
-                                        chess.position !== "X" &&
-                                        <div key={idx} className={styles.chess}
-                                            style={{ top: Math.floor(chess.position / 10) * 100 + "px", left: (chess.position % 10) * 100 + "px" }}
-                                            id={chess.id}
-                                            onMouseEnter={() => handleHoverChess(chess)}
-                                            onMouseLeave={() => cancelHoverChess()}
-                                            onClick={() => handleClickChess(chess)}
-                                        >
-                                            <img src={chess.color === "w" ? chess.img.white : chess.img.black}></img>
-                                        </div>
-                                    }
-                                </>
-                            )
-                        })
-                    }
+                    {renderObject}
                 </div >
             </>
         )
@@ -452,6 +520,7 @@ export default function Play() {
 
     return (
         <>
+            {renderNotification}
             <Head>
                 <meta name="description" content="Generated by create next app" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />

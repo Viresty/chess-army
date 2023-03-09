@@ -76,6 +76,32 @@
             flex-grow: 1;
             background-color: rgba(#0A0708, 0.25);
             border-bottom: 0.2rem solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            .inventory {
+                display: grid;
+                height: 300px;
+                width: 1000px;
+                grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+                background-color: rgba(#0A0708, 0.5);
+                padding: 1rem;
+                border: 0.1rem solid white;
+                border-radius: 0.2rem;
+
+                .inventoryItem {
+                    padding: 0.2rem;
+                    height: 100px;
+                    width: 100px;
+                    border: 0.1rem solid transparent;
+
+                    &:hover {
+                        border: 0.1rem solid red;
+
+                    }
+                }
+            }
         }
 
         .teamFormat {
