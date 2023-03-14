@@ -25,7 +25,7 @@
     width: 20%;
     padding: 0 3rem;
 
-    a {
+    &a, p {
       height: 100%;
       width: 100%;
       border: none;
@@ -42,6 +42,10 @@
       &:hover {
         background-image: linear-gradient(to top, rgba(white, 0.5), transparent, transparent);
       }
+    }
+
+    & > p {
+      background-image: linear-gradient(to top, rgba(white, 0.5), transparent, transparent);
     }
   }
 
@@ -88,6 +92,10 @@
   background-color: rgba(#121212, 0.9);
   width: 100vw;
   min-height: 100vh;
+  background-image: url(https://cdnb.artstation.com/p/assets/images/images/005/896/831/large/zy-hwang-1-79.jpg?1494522225);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 .notificationContainer {
@@ -107,6 +115,8 @@
     right: 0;
     bottom: 0;
     background-color: rgba(#0A0708, 0.5);
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
   }
 
   .notificationBox {

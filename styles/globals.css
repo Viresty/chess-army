@@ -1,9 +1,9 @@
 :root {
   --max-width: 1100px;
   --border-radius: 12px;
-  --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
-    'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
-    'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
+  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
+    "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -80,7 +80,7 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  font-family: 'Saira Condensed', sans-serif;
+  font-family: "Saira Condensed", sans-serif;
   letter-spacing: 0.1rem;
   user-select: none;
 }
@@ -115,4 +115,81 @@ a {
 img {
   height: 100%;
   width: 100%;
+  object-fit: cover;
+}
+
+@keyframes logo-animation {
+  0% {
+    stroke-dashoffset: 800;
+    stroke: white;
+  }
+
+  70% {
+    stroke-dashoffset: 0;
+    stroke: #00a4bd;
+  }
+
+  75% {
+    stroke-dashoffset: 0;
+    stroke: #00a4bd;
+  }
+
+  95% {
+    stroke-dashoffset: 800;
+    stroke: white;
+  }
+}
+
+@keyframes change-color {
+  0% {
+    color: white;
+  }
+
+  70% {
+    color: #00a4bd;
+  }
+
+  75% {
+    color: #00a4bd;
+  }
+
+  95% {
+    color: white;
+  }
+}
+
+.loadingScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0a0708;
+  height: 100vh;
+  width: 100vw;
+  z-index: 100;
+  padding: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loadingScreen p {
+  font-size: 10rem;
+  color: white;
+  text-align: center;
+  animation-name: change-color;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+}
+
+.loadingScreen > svg {
+  height: 100%;
+  width: 100%;
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  stroke-width: 8px;
+  animation-name: logo-animation;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
 }

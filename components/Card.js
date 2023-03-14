@@ -13,7 +13,7 @@ const Card = ({ data = {} }) => {
                     </div>
                     <div className={styles.cardAbility}>
                         {
-                            data.ability.content?<></>:<p>{data.ability.content}</p>
+                            data.ability?<p>{data.ability.content}</p>:<></>
                         }
                     </div>
                 </div>

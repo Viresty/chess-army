@@ -9,6 +9,23 @@
     background-color: rgba(#121212, 0.9);
 
     .gameBackground {
+        filter: blur(6px);
+        -webkit-filter: blur(6px);
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 100vw;
+        object-fit: cover;
+        transition: all 0.6s;
+        opacity: 1;
+
+        &.backgroundBehind {
+            opacity: 0;
+        }
+    }
+
+    .inGameBackground {
         position: absolute;
         top: 0;
         left: 0;
@@ -19,6 +36,7 @@
 }
 
 .room {
+    position: relative;
     display: flex;
     height: 100%;
     width: 100%;
@@ -60,8 +78,9 @@
         }
     }
 
-    .roomRight {
-        width: 75%;
+    .roomCenter {
+        width: 50%;
+        height: calc(100vh - 3rem);
         background-color: rgba(#0A0708, 0.25);
         display: flex;
         flex-direction: column;
@@ -77,28 +96,47 @@
             background-color: rgba(#0A0708, 0.25);
             border-bottom: 0.2rem solid white;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 4rem 3rem;
+            overflow: hidden;
 
-            .inventory {
-                display: grid;
-                height: 300px;
-                width: 1000px;
-                grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-                background-color: rgba(#0A0708, 0.5);
-                padding: 1rem;
-                border: 0.1rem solid white;
-                border-radius: 0.2rem;
+            .inventoryWrapper {
+                position: relative;
+                flex-grow: 1;
+                width: 100%;
+                max-height: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
 
-                .inventoryItem {
+                .inventory {
+                    width: 100%;
+                    // height: 1000px;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+                    background-color: rgba(#0A0708, 0.5);
+                    // border: 0.1rem solid white;
+                    border-radius: 0.2rem;
                     padding: 0.2rem;
-                    height: 100px;
-                    width: 100px;
-                    border: 0.1rem solid transparent;
 
-                    &:hover {
-                        border: 0.1rem solid red;
+                    .inventoryItem {
+                        height: 100px;
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
 
+                        .chessItem {
+                            height: 100px;
+                            width: 100px;
+                            padding: 0.2rem;
+                            border: 0.1rem solid transparent;
+
+                            &:hover {
+                                border: 0.1rem solid red;
+                            }
+                        }
                     }
                 }
             }
@@ -115,7 +153,7 @@
             align-items: center;
             border-top: 0.2rem solid white;
 
-            .playArea {   
+            .playArea {
                 position: relative;
                 display: grid;
                 // flex-grow: 1;
@@ -124,13 +162,7 @@
                 grid-template-columns: 1fr 1fr 1fr 1fr;
                 grid-template-rows: 1fr 1fr;
                 border: 1px solid black;
-
-                div {
-                    text-align: center;
-                    align-items: center;
-                    height: 100px;
-                    width: 100px;
-                }
+                background-color: white;
             }
         }
 
@@ -152,6 +184,14 @@
         }
     }
 
+    .roomRight {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 25%;
+        gap: 4rem;
+        padding: 2rem 0.75rem;
+    }
 }
 
 .playArea {
@@ -162,13 +202,14 @@
     width: 1000px;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    border: 1px solid black;
+    // border: 1px solid black;
 
     div {
         text-align: center;
         align-items: center;
         height: 100px;
         width: 100px;
+        z-index: 20;
 
         .selectingCell {
             visibility: hidden;
@@ -193,7 +234,7 @@
         background-color: black;
 
         img {
-            opacity: 0.75;
+            opacity: 0.65;
         }
     }
 
@@ -214,7 +255,7 @@
 
     .chessSelecting {
         .selectingCell {
-            border: 0.25rem solid rgba(red, 1.0);
+            background-color: rgba(red, .25);
             visibility: visible;
         }
     }
@@ -285,4 +326,394 @@
 .chess {
     position: absolute;
     transition: all 0.3s;
+    z-index: 50;
+    background-size: contain;
+
+    img {
+        z-index: 51;
+    }
+
+    &.chessHovering {
+        background-image: url(https://i.ibb.co/F5Sn7pG/choice.png);
+    }
+
+    &.chessSelecting {
+        background-image: url(https://i.ibb.co/2WXp34g/choice-magic.png);
+    }
+}
+
+.gameModeList {
+    display: flex;
+    flex-grow: 1;
+    width: 100%;
+    margin-top: 3rem;
+    justify-content: space-around;
+    align-items: center;
+    flex-direction: row;
+    padding: 5rem;
+
+    .tiltBoxWrap {
+        position: relative;
+        height: 40rem;
+        width: 20rem;
+        transition: all 0.5s;
+        perspective: 1000px;
+        z-index: 50;
+
+        &:hover {
+            z-index: 51;
+            height: 40rem;
+            font-size: 3.5rem;
+            transition: all 0.3s;
+            transform: scale(1.1);
+        }
+
+        .gameMode {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            border: 0.1rem solid white;
+            border-radius: 0.5rem;
+            background-color: #0A0708;
+            color: white;
+            text-align: center;
+            font-size: 3rem;
+            transition: all 0.5s;
+            transform: rotateX(0deg) rotateY(0deg);
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            background-position: (50%, 50%);
+            background-repeat: no-repeat;
+
+            p {
+                z-index: 60;
+                transform: translateZ(40px);
+            }
+
+            img {
+                position: absolute;
+                border-radius: 0.5rem;
+                transform: translateZ(0px);
+            }
+        }
+
+        .tOver {
+            width: 33.333%;
+            height: 33.333%;
+            position: absolute;
+            z-index: 52;
+
+            &:nth-child(1) {
+                left: 0;
+                top: 0;
+
+                &:hover~.gameMode {
+                    transform: rotateX(-20deg) rotateY(20deg);
+                    background-position: (30%, 30%);
+                }
+            }
+
+            &:nth-child(2) {
+                left: 33.333%;
+                top: 0;
+
+                &:hover~.gameMode {
+                    transform: rotateX(-20deg) rotateY(0deg);
+                    background-position: (50%, 30%);
+                }
+            }
+
+            &:nth-child(3) {
+                left: 66.666%;
+                top: 0;
+
+                &:hover~.gameMode {
+                    transform: rotateX(-20deg) rotateY(-20deg);
+                    background-position: (70%, 30%);
+                }
+            }
+
+            &:nth-child(4) {
+                left: 0;
+                top: 33.333%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(0deg) rotateY(20deg);
+                    background-position: (30%, 50%);
+                }
+            }
+
+            &:nth-child(5) {
+                left: 33.333%;
+                top: 33.333%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(0deg) rotateY(0deg);
+                    background-position: (50%, 50%);
+                }
+            }
+
+            &:nth-child(6) {
+                left: 66.666%;
+                top: 33.333%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(0deg) rotateY(-20deg);
+                    background-position: (70%, 50%);
+                }
+            }
+
+            &:nth-child(7) {
+                left: 0;
+                top: 66.666%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(20deg) rotateY(20deg);
+                    background-position: (30%, 70%);
+                }
+            }
+
+            &:nth-child(8) {
+                left: 33.333%;
+                top: 66.666%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(20deg) rotateY(0deg);
+                    background-position: (50%, 70%);
+                }
+            }
+
+            &:nth-child(9) {
+                left: 66.666%;
+                top: 66.666%;
+
+                &:hover~.gameMode {
+                    transform: rotateX(20deg) rotateY(-20deg);
+                    background-position: (70%, 70%);
+                }
+            }
+        }
+    }
+}
+
+.searchRoom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 80;
+
+    .blurBackground {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(#0A0708, 0.75);
+        filter: blur(6px);
+        -webkit-filter: blur(6px);
+    }
+
+    form {
+        z-index: 81;
+        height: 15rem;
+        width: 30rem;
+        background-color: rgba(#333, 1);
+        color: whitesmoke;
+        font-size: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 1rem;
+        gap: 1rem;
+
+        p {
+            font-size: 1rem;
+            color: red;
+        }
+
+        input {
+            border: none;
+            height: 5rem;
+            color: white;
+            z-index: 20;
+            font-size: 4rem;
+            width: 90%;
+            background-color: transparent;
+            outline: none;
+            padding: 0 2rem;
+            border-bottom: 2px solid #72e1ff;
+            text-align: center;
+            letter-spacing: 1rem;
+
+            &:hover {
+                border-color: #0aaad6;
+
+                &+label {
+                    color: #0aaad6;
+                }
+            }
+
+            &:focus,
+            &[value]:not([value=""]) {
+                border-width: 4px;
+
+                &+label {
+                    font-size: 1rem;
+                    left: 0.5rem;
+                    top: -0.75rem;
+                }
+            }
+        }
+    }
+}
+
+.timerWrapper {
+    height: 5.5rem;
+    width: 12rem;
+    z-index: 80;
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s, box-shadow 0.3s, color 0.3s, background-color 0.3s;
+
+    &.blackTurn {
+        color: whitesmoke;
+        background-color: #333;
+        box-shadow: 0 0 10px 2px #333;
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px 5px #333;
+        }
+    }
+
+    &.whiteTurn {
+        color: #333;
+        background-color: whitesmoke;
+        box-shadow: 0 0 10px 2px whitesmoke;
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px 5px whitesmoke;
+        }
+    }
+
+    .timer {
+        width: 100%;
+        margin-top: -0.95rem;
+        margin-bottom: -0.95rem;
+        display: grid;
+        padding: 0 1.2rem;
+        text-align: center;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    }
+
+    .whitePlayer {
+        color: #333;
+        background-color: whitesmoke;
+        box-shadow: 0 0 5px 1px whitesmoke;
+    }
+
+    .blackPlayer {
+        color: whitesmoke;
+        background-color: #333;
+        box-shadow: 0 0 5px 1px #333;
+    }
+
+    .mainTimer {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+        justify-content: center;
+        z-index: 81;
+        background-color: inherit;
+        width: 100%;
+        border-radius: 5px;
+        font-size: 4rem;
+        font-weight: bolder;
+    }
+
+    .timerTop {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-radius: 1rem 1rem 0 0;
+        top: -25%;
+    }
+
+    .timerBottom {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        border-radius: 0 0 1rem 1rem;
+        bottom: -25%;
+    }
+
+    .timerTop,
+    .timerBottom {
+        width: 11rem;
+        height: 5rem;
+        position: absolute;
+        z-index: 79;
+        transition: all 0.3s;
+        padding: 0 0.75rem;
+
+        .timer {
+            width: 50%;
+            margin: 0;
+            padding: 0;
+        }
+    }
+
+    &:hover {
+        .timerTop {
+            top: -75%;
+            flex-direction: column;
+            justify-content: center;
+
+            .timer {
+                margin-top: -1rem;
+            }
+        }
+
+        .timerBottom {
+            bottom: -75%;
+            flex-direction: column-reverse;
+            justify-content: center;
+
+            .timer {
+                margin-bottom: -1rem;
+            }
+        }
+
+        .timerTop,
+        .timerBottom {
+            align-items: center;
+
+            .timer {
+                width: 100%;
+                font-size: 2.25rem;
+            }
+        }
+    }
 }

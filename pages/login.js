@@ -23,7 +23,7 @@ export default function Home() {
                 if (snapshot.exists()) {
                     const data = snapshot.val().filter(x => x)[0];
                     if (data.password === loginInfo.password) {
-                        sessionStorage.setItem("accountInfo", JSON.stringify({ "nickname": loginInfo.nickname, "password": loginInfo.password, "id": data.id + "" }));
+                        localStorage.setItem("accountInfo", JSON.stringify({ "nickname": loginInfo.nickname, "password": loginInfo.password, "id": data.id + "" }));
                         router.push("/");
                     }
                 } else {
@@ -33,7 +33,6 @@ export default function Home() {
             .catch((error) => {
                 console.error(error);
             });
-
     }
 
     return (

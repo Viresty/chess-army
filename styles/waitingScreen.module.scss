@@ -1,0 +1,113 @@
+.waitingScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 100vw;
+    z-index: 100;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    transition: all 0.2s;
+    background-color: #444;
+    
+    .halfScreen {
+        width: 50%;
+        height: 100%;
+        background-color: #444;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .player {
+            position: relative;
+            height: 561px;
+            width: 411px;
+            border-radius: 10px;
+            z-index: 90;
+            border: 0.2rem solid #0A0708;
+
+            .playerAvatar {
+                height: 100%;
+                width: 100%;
+                border-radius: 10px;
+
+                img {
+                    border-radius: 5px;
+                }
+            }
+
+            .playerName {
+                width: 100%;
+                height: 40%;
+                font-size: 4rem;
+                font-weight: bolder;
+                text-align: center;
+                position: absolute;
+                bottom: 0%;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                border-radius: 0 0 5px 5px;
+            }
+
+            &.whitePlayer {
+                border-color: whitesmoke;
+
+                .playerName {
+                    color: #0A0708;
+                    background-image: linear-gradient(to top, rgba(whitesmoke, 0.95), rgba(whitesmoke, 0.9), rgba(whitesmoke, 0.7), transparent);
+                }
+            }
+            
+            &.blackPlayer {
+                border-color: #0A0708;
+
+                .playerName {
+                    color: whitesmoke;
+                    background-image: linear-gradient(to top, rgba(#0A0708, 0.9), rgba(#0A0708, 0.8), transparent);
+                }
+            }
+
+        }
+    }
+
+    .centerLetter {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        color: #00a4bd;
+        font-size: 20rem;
+        font-weight: bolder;
+        margin-top: -10rem;
+        margin-left: -10rem;
+        display: flex;
+
+        p {
+            font-family: 'Italianno', cursive;
+
+            &:nth-child(1) {
+                transform: translateX(-1rem);
+                margin-top: -3rem;
+            }
+
+            &:nth-child(2) {
+                transform: translateX(-3rem);
+                margin-top: 3rem;
+            }
+        }
+    }
+
+    &.loadSuccess {
+        transform: scaleY(0);
+    }
+
+    .playerConnect {
+        color: white;
+        font-size: 2rem;
+        margin-top: 1rem;
+    }
+}

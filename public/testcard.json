@@ -1,9 +1,8 @@
-[
-    {
-        "name": "GẤU",
-        "ability": {},
-        "moveset": [],
-        "bgImg": "https://i.pinimg.com/564x/07/5a/40/075a4002be2d3b5f87f1ca2f1c0d3fb6.jpg",
-        "img": ""
+{
+    "playerStatus": {
+        "0": "Offline",
+        "1": "Online",
+        "2": "Building team ...",
+        "3": "Playing"
     }
-]
+}

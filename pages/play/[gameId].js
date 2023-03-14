@@ -4,13 +4,13 @@ import styles from "../../styles/Play.module.scss";
 import { ref, child, get, update, query, onValue } from "firebase/database";
 import { database } from "../api/firebase";
 import { React, ReactDOM, useEffect, useState, useMemo } from "react";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
 // Component
 import Card from "../../components/Card";
 import NotificationBox from '../../components/NotificationBox';
-
+import LoadingScreen from '../../components/LoadingScreen';
+import WaitingScreen from '../../components/WaitingScreen';
 // Data
-import datajson from "../../public/testcard.json"
 import notifivn from "../../message/notification_vn"
 
 let ObjectMap = [
@@ -35,13 +35,16 @@ let ObjectMap = [
 export default function Play() {
     const [chessDatabase, setChessDatabase] = useState([]);
     const [loadedData, setLoadedData] = useState(0);
+
     const [turn, setTurn] = useState(2); // White: 2n + 1, Black: 2n
     const [phase, setPhase] = useState(1); // 0: Setting; 1: Waitting, 2: Chosing
     const [mapInfo, setMapInfo] = useState({});
     const [chessInfos, setChessInfos] = useState([]);
     const [objectInfos, setObjectInfos] = useState([]);
 
-    const [playerInfo, setPlayerInfo] = useState({});
+    const [gameData, setGameData] = useState({});
+    const [userInfo, setUserInfo] = useState({});
+    const [playerData, setPlayerData] = useState([]);
 
     const [selectingChess, setSelectingChess] = useState({});
     const [objectsMap, setObjectsMap] = useState([...ObjectMap]);
@@ -49,7 +52,12 @@ export default function Play() {
     const [notificationMessage, setNotificationMessage] = useState("");
     const [showNotification, setShowNotification] = useState(false);
 
+    // Timer
+    const [gameTimerCountDown, setGameTimerCountDown] = useState();
+    const [gameTimer, setGameTimer] = useState();
+
     const dbRef = ref(database);
+    const router = useRouter();
 
     // Function
     const setupNotification = (id) => {
@@ -62,9 +70,9 @@ export default function Play() {
 
         let chessData;
 
-        let accountdata = localStorage.getItem("accountInfo");
+        let accountdata = JSON.parse(localStorage.getItem("accountInfo"));
         if (!accountdata) accountdata = JSON.parse(sessionStorage.getItem("accountInfo"));
-        if (!accountdata) return;
+        if (!accountdata) router.push("/");
 
         await get(query(ref(database, "chess")))
             .then((snapshot) => {
@@ -82,6 +90,13 @@ export default function Play() {
         await get(child(dbRef, "game/" + window.location.pathname.split("/")[2]))
             .then((snapshot) => {
                 if (snapshot.exists()) {
+                    setGameData(snapshot.val());
+                    if (!snapshot.val().players.find(x => x.id === accountdata.id)) router.push("/");
+                    else {
+                        const index = snapshot.val().players.findIndex(x => x.id === accountdata.id);
+                        update(ref(database, "game/" + window.location.pathname.split("/")[2] + "/players/" + index),
+                            { connected: true });
+                    }
                     // Lấy các dữ liệu khác như bản đồ, người chơi và quân cờ
                     get(child(dbRef, "maps/" + snapshot.val().mapId))
                         .then((snapshot) => {
@@ -95,16 +110,34 @@ export default function Play() {
                             console.log(error)
                         })
 
+                    const playerList = [];
+                    snapshot.val().players.forEach((player) => {
+                        get(child(dbRef, "user/" + player.id))
+                            .then((snapshot) => {
+                                if (snapshot.exists()) {
+                                    playerList.push({ ...snapshot.val(), ...player });
+                                    setPlayerData([...playerList]);
+                                } else {
+                                    console.log("Can't found user data");
+                                };
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                            });
+                    })
+
                     const chessList = [];
                     let userColor = "";
                     snapshot.val().players.map((player, idx) => {
                         const playerColor = player.color;
 
                         if (player.id === accountdata.id) {
-                            setPlayerInfo({ ...accountdata, "color": playerColor, "index": idx });
+                            setUserInfo({ ...accountdata, "color": playerColor, "index": idx });
                             if (userColor !== playerColor) userColor = playerColor;
                             console.log("player color:", userColor);
                         }
+
+                        setGameData(snapshot.val());
 
                         player.chesses.map((chess, idx) => {
                             const data = chessData.filter(x => x.id === chess.chessId)[0];
@@ -121,13 +154,15 @@ export default function Play() {
                     setTurn(snapshot.val().turn);
                 } else {
                     console.log("No data available");
+                    router.push("/");
                 }
             })
             .catch((error) => {
                 console.error(error);
             });
-        setLoadedData(loadedData + 1);
-        fetchDB();
+        setTimeout(() => {
+            setLoadedData(1);
+        }, 1000);
     };
 
     const updateMove = (chess, newPos) => {
@@ -140,15 +175,16 @@ export default function Play() {
         allChessList[chessinfo[0]].position = newPos;
 
         const chessList = [];
-        allChessList.filter(x => x.color === playerInfo.color).forEach((chess) => {
+        allChessList.filter(x => x.color === userInfo.color).forEach((chess) => {
             chessList.push({ chessId: chess.id.split("_")[2], position: 99 - chess.position })
         })
 
-        console.log(chessList);
+        // console.log(chessList);
         chessList.forEach((value, idx) => {
-            update(ref(database, "game/" + window.location.pathname.split("/")[2] + "/players/" + playerInfo.index + "/chesses/" + idx), value);
+            update(ref(database, "game/" + window.location.pathname.split("/")[2] + "/players/" + userInfo.index + "/chesses/" + idx), value);
         })
-        update(ref(database, "game/" + window.location.pathname.split("/")[2]), { turn: turn + 1 });
+        update(ref(database, "game/" + window.location.pathname.split("/")[2] + "/players/" + userInfo.index), { timer: gameTimer });
+        update(ref(database, "game/" + window.location.pathname.split("/")[2]), { turn: turn + 1, lastMoveTime: Date.now() });
     }
 
     const fetchDB = () => {
@@ -156,18 +192,37 @@ export default function Play() {
 
         onValue(query(ref(database, "game/" + window.location.pathname.split("/")[2])), (snapshot) => {
             if (snapshot.exists()) {
-                // console.log("UPDATE");
+                setGameData(snapshot.val());
+
+                if (snapshot.val().players.filter(x => x.connected).length === 2 && snapshot.val().lastMoveTime === "")
+                    update(ref(database, "game/" + window.location.pathname.split("/")[2]), { turn: turn + 1, lastMoveTime: Date.now() });
+
+                const playerList = [];
+                snapshot.val().players.forEach((player) => {
+                    get(child(dbRef, "user/" + player.id))
+                        .then((snapshot) => {
+                            if (snapshot.exists()) {
+                                playerList.push({ ...snapshot.val(), ...player });
+                                setPlayerData([...playerList]);
+                            } else {
+                                console.log("Can't found user data");
+                            };
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                })
 
                 const chessList = [];
                 let userColor = "";
-                snapshot.val().players.map((player, idx) => {
+                snapshot.val().players.forEach((player) => {
                     const playerColor = player.color;
 
-                    if (player.id === playerInfo.id) {
+                    if (player.id === userInfo.id) {
                         if (userColor !== playerColor) userColor = playerColor;
                     }
 
-                    player.chesses.map((chess, idx) => {
+                    player.chesses.forEach((chess) => {
                         const data = chessDatabase.filter(x => x.id === chess.chessId)[0];
                         chessList.push({
                             ...data,
@@ -198,7 +253,7 @@ export default function Play() {
             showMovesOff("#");
             showMovesOff("*");
             chess.position = i;
-            console.log(chess);
+            // console.log(chess);
             chesses[chessinfo[0]] = chess;
             let newMap = [...objectsMap];
             newMap[x][y] = chess.id;
@@ -315,25 +370,25 @@ export default function Play() {
                             topX -= 2; bottomX += 2; leftX -= 1; rightX += 1;
                             topY -= 1; bottomY += 1; leftY -= 2; rightY += 2;
                             // forward-left
-                            if (topX > 0 && leftX > 0)
+                            if (topX >= 0 && leftX >= 0)
                                 if (isMoveable(objectsMap[topX][leftX], chess.color, action)) objectsMap[topX][leftX] += symbol;
                             // forward-right
-                            if (topX > 0 && rightX < 10)
+                            if (topX >= 0 && rightX < 10)
                                 if (isMoveable(objectsMap[topX][rightX], chess.color, action)) objectsMap[topX][rightX] += symbol;
                             // backward-left
-                            if (bottomX < 10 && leftX > 0)
+                            if (bottomX < 10 && leftX >= 0)
                                 if (isMoveable(objectsMap[bottomX][leftX], chess.color, action)) objectsMap[bottomX][leftX] += symbol;
                             // backward-right
                             if (bottomX < 10 && rightX < 10)
                                 if (isMoveable(objectsMap[bottomX][rightX], chess.color, action)) objectsMap[bottomX][rightX] += symbol;
                             // forward-left
-                            if (topY > 0 && leftY > 0)
+                            if (topY >= 0 && leftY >= 0)
                                 if (isMoveable(objectsMap[topY][leftY], chess.color, action)) objectsMap[topY][leftY] += symbol;
                             // forward-right
-                            if (topY > 0 && rightY < 10)
+                            if (topY >= 0 && rightY < 10)
                                 if (isMoveable(objectsMap[topY][rightY], chess.color, action)) objectsMap[topY][rightY] += symbol;
                             // backward-left
-                            if (bottomY < 10 && leftY > 0)
+                            if (bottomY < 10 && leftY >= 0)
                                 if (isMoveable(objectsMap[bottomY][leftY], chess.color, action)) objectsMap[bottomY][leftY] += symbol;
                             // backward-right
                             if (bottomY < 10 && rightY < 10)
@@ -355,6 +410,10 @@ export default function Play() {
                 if (!cell.classList.contains(styles.chessSelecting) & symbol === "#") cell.classList.add(styles.chessSelecting);
             }
         })
+
+        var chesscell = document.getElementById(chess.id);
+        if (!chesscell.classList.contains(styles.chessHovering) & symbol === "*") chesscell.classList.add(styles.chessHovering);
+        if (!chesscell.classList.contains(styles.chessSelecting) & symbol === "#") chesscell.classList.add(styles.chessSelecting);
     }
 
     const showMovesOff = (symbol) => {
@@ -375,16 +434,21 @@ export default function Play() {
                 }
             }
         })
+        chessInfos.forEach((chess) => {
+            var chesscell = document.getElementById(chess.id);
+            if (chesscell.classList.contains(styles.chessHovering) & symbol === "*") chesscell.classList.remove(styles.chessHovering);
+            if (chesscell.classList.contains(styles.chessSelecting) & symbol === "#") chesscell.classList.remove(styles.chessSelecting);
+        })
     }
 
     const handleClickChess = (chess) => {
         switch (phase) {
             case 1:
-                if (turn % 2 === 1 && playerInfo.color !== "w" || turn % 2 === 0 && playerInfo.color !== "b") {
+                if (turn % 2 === 1 && userInfo.color !== "w" || turn % 2 === 0 && userInfo.color !== "b") {
                     setupNotification("ER000");
                     return;
                 };
-                if (playerInfo.color !== chess.color) {
+                if (userInfo.color !== chess.color) {
                     setupNotification("ER001");
                     return;
                 };
@@ -415,9 +479,6 @@ export default function Play() {
     }
 
     const handleHoverChess = (chess) => {
-        // let x = Math.floor(chess.position / 10);
-        // let y = chess.position % 10;
-        // console.log(objectsMap);
         showMovesOn(chess, "*");
     }
 
@@ -450,7 +511,18 @@ export default function Play() {
     // Update
     useEffect(() => {
         fetchDB();
-    }, [loadedData])
+    }, [loadedData]);
+
+    useEffect(() => {
+        if (!gameData.players) return;
+        const turnColor = turn % 2 === 1 ? "w" : "b";
+        setGameTimer(gameData.players.find(x => x.color === turnColor).timer + 10);
+
+        clearInterval(gameTimerCountDown);
+        setGameTimerCountDown(setInterval(() => {
+            setGameTimer(gameData.players.find(x => x.color === turnColor).timer - Math.floor((Date.now() - gameData.lastMoveTime) / 1000));
+        }, 500))
+    }, [turn, gameData]);
 
     // Render
     const renderNotification = useMemo(() => {
@@ -509,7 +581,7 @@ export default function Play() {
     const renderPlayArea = useMemo(() => {
         return (
             <>
-                <img className={styles.gameBackground} src="https://i.ibb.co/n30yjHG/grassland-bg.jpg" alt="grassland-bg" border="0"></img>
+                <img className={styles.inGameBackground} src="https://i.ibb.co/n30yjHG/grassland-bg.jpg" alt="grassland-bg" border="0"></img>
                 < div className={styles.playArea} >
                     {renderGround}
                     {renderObject}
@@ -518,9 +590,113 @@ export default function Play() {
         )
     }, [chessInfos, mapInfo, objectsMap, turn, phase]);
 
+    const renderWaitingScreen = useMemo(() => {
+        return <>
+            <WaitingScreen data={playerData} />
+        </>
+    }, [playerData]);
+
+    const renderLoadingScreen = useMemo(() => {
+        return <LoadingScreen loaded={loadedData} />
+    }, [loadedData]);
+
+    const Timer = useMemo(() => {
+        if (!gameData.players) return;
+        var timer = gameTimer;
+
+        const turnColor = turn % 2 === 1 ? "w" : "b";
+        timer += playerData.find(x => x.color !== turnColor) ? playerData.find(x => x.color !== turnColor).timer : 0;
+
+        function dragElement(elmnt) {
+            if (!elmnt) return;
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            var divMove = false;
+
+            elmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                divMove = true;
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                const rect = elmnt.getBoundingClientRect();
+                // set the element's new position:
+                if (elmnt.offsetTop - pos2 > 10 && (elmnt.offsetTop - pos2 + rect.height) < window.innerHeight - 10)
+                    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                if (elmnt.offsetLeft - pos1 > 10 && (elmnt.offsetLeft - pos1 + rect.width) < window.innerWidth - 10)
+                    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                /* stop moving when mouse button is released:*/
+                document.onmouseup = null;
+                document.onmousemove = null;
+                // if (divMove) { alert("Div move"); }
+                // else {
+                //     alert("Click func")
+                // }
+                divMove = false;
+            }
+        }
+
+        dragElement(document.getElementById("gameTimer"));
+
+        return (
+            <>
+                <div className={[styles.timerWrapper, turnColor === "w" ? styles.whiteTurn : styles.blackTurn].join(' ')} id="gameTimer">
+                    {
+                        playerData.map((player) => {
+                            const playertimer = player.color === turnColor ? gameTimer : player.timer;
+                            return <>
+                                <div className={[player.color === "w" ? styles.whitePlayer : styles.blackPlayer,
+                                player.id === userInfo.id ? styles.timerBottom : styles.timerTop].join(" ")}>
+                                    <p className={styles.playerName}>{player.name}</p>
+                                    <div className={styles.timer}>
+                                        <span>{("00" + Math.floor(playertimer / 60)).slice(-2, -1)}</span>
+                                        <span>{("00" + Math.floor(playertimer / 60)).slice(-1)}</span>
+                                        <span>:</span>
+                                        <span>{("00" + playertimer % 60).slice(-2, -1)}</span>
+                                        <span>{("00" + playertimer % 60).slice(-1)}</span>
+                                    </div>
+                                </div>
+                            </>
+                        })
+                    }
+                    <div className={styles.mainTimer}>
+                        <div className={styles.timer}>
+                            <span>{("00" + Math.floor(timer / 60)).slice(-2, -1)}</span>
+                            <span>{("00" + Math.floor(timer / 60)).slice(-1)}</span>
+                            <span>:</span>
+                            <span>{("00" + timer % 60).slice(-2, -1)}</span>
+                            <span>{("00" + timer % 60).slice(-1)}</span>
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
+    }, [gameData, gameTimer, gameTimerCountDown, playerData])
+
     return (
         <>
             {renderNotification}
+            {Timer}
+            {renderWaitingScreen}
+            {renderLoadingScreen}
             <Head>
                 <meta name="description" content="Generated by create next app" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
